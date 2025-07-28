@@ -1,0 +1,375 @@
+/* Custom styles for CPU Scheduler Visualizer */
+
+/* Smooth transitions */
+* {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Algorithm card hover effects */
+.algorithm-card {
+    transition: all 0.3s ease;
+}
+
+.algorithm-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.algorithm-card.selected {
+    border-color: #3B82F6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+/* Process item animations */
+.process-item {
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease-out;
+}
+
+.process-item:hover {
+    transform: translateX(4px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Gantt chart container */
+#ganttChartContainer {
+    position: relative;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px dashed #e2e8f0;
+    border-radius: 0.5rem;
+    width: 100%;
+    overflow-x: auto;
+    padding: 1rem;
+}
+
+#ganttChartContainer.has-data {
+    background: transparent;
+    border: 1px solid #e2e8f0;
+    padding: 0.5rem;
+}
+
+/* Responsive Gantt chart styles */
+.gantt-chart-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0.5rem 0;
+}
+
+.gantt-chart-wrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.gantt-chart-wrapper::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 3px;
+}
+
+.gantt-chart-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.gantt-chart-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Gantt bar hover effects */
+.gantt-bar {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gantt-bar:hover {
+    opacity: 0.85;
+    filter: brightness(1.05);
+    stroke-width: 3;
+}
+
+/* Responsive breakpoints for Gantt chart */
+@media (max-width: 768px) {
+    #ganttChartContainer {
+        margin: 0 -0.5rem;
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+    }
+    
+    .gantt-chart-wrapper {
+        padding: 0.25rem 0;
+    }
+}
+
+@media (max-width: 640px) {
+    #ganttChartContainer svg text {
+        font-size: 8px !important;
+    }
+    
+    #ganttChartContainer {
+        padding: 0.25rem;
+    }
+}
+
+.dark #ganttChartContainer {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #374151;
+}
+
+/* Gantt chart bars */
+.gantt-bar {
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.gantt-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.6s ease;
+}
+
+.gantt-bar:hover::before {
+    left: 100%;
+}
+
+.gantt-bar:hover {
+    transform: scaleY(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Button hover effects */
+.btn-primary {
+    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1D4ED8, #1E40AF);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Loading animation */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Metrics table enhancements */
+.metrics-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.dark .metrics-table tbody tr:hover {
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Process color indicators */
+.process-color-1 { background-color: #3B82F6; }
+.process-color-2 { background-color: #EF4444; }
+.process-color-3 { background-color: #10B981; }
+.process-color-4 { background-color: #F59E0B; }
+.process-color-5 { background-color: #8B5CF6; }
+.process-color-6 { background-color: #EC4899; }
+.process-color-7 { background-color: #06B6D4; }
+.process-color-8 { background-color: #84CC16; }
+
+/* Legend items */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.dark .legend-item {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #374151;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #6B7280;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+    .algorithm-card {
+        margin-bottom: 1rem;
+    }
+    
+    .grid-cols-3 {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    .gantt-chart-container {
+        overflow-x: auto;
+    }
+}
+
+/* Focus styles for accessibility */
+input:focus,
+button:focus,
+select:focus {
+    outline: 2px solid #3B82F6;
+    outline-offset: 2px;
+}
+
+/* Animation for showing/hiding elements */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Tooltip styles */
+.tooltip {
+    position: relative;
+}
+
+.tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.tooltip:hover::after {
+    opacity: 1;
+}
+
+/* Dark theme enhancements */
+.dark #ganttChartContainer {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-color: #374151;
+}
+
+/* Process legend styling */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Dark theme text colors - ensure all text is visible */
+.dark .text-gray-500 {
+    color: #9ca3af !important;
+}
+
+.dark .text-gray-600 {
+    color: #6b7280 !important;
+}
+
+.dark .text-gray-700 {
+    color: #d1d5db !important;
+}
+
+.dark .text-gray-900 {
+    color: #ffffff !important;
+}
+
+/* Ensure all table text is visible in dark mode */
+.dark table {
+    color: #ffffff;
+}
+
+.dark thead th {
+    color: #d1d5db !important;
+}
+
+.dark tbody td {
+    color: #ffffff !important;
+}
+
+/* Dark theme form inputs */
+.dark input::placeholder {
+    color: #9ca3af !important;
+}
+
+/* Dark theme process list */
+.dark #processList .text-gray-500 {
+    color: #9ca3af !important;
+}
+
+.dark #processList .text-gray-600 {
+    color: #d1d5db !important;
+}
+
+/* Dark theme metrics explanation */
+.dark .text-gray-500 strong {
+    color: #d1d5db !important;
+}
