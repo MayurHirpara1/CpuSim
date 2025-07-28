@@ -41,10 +41,6 @@
                     <h1 class="text-xl font-bold text-gray-900 dark:text-white">CPU Scheduler Visualizer</h1>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button id="exportChart" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200" disabled>
-                        <i class="fas fa-download mr-2"></i>
-                        Export Chart
-                    </button>
                     <button id="exportCSV" class="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200" disabled>
                         <i class="fas fa-file-csv mr-2"></i>
                         Export CSV
@@ -79,10 +75,16 @@
                         <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Add Process</h2>
                     </div>
-                    <button id="resetAll" class="inline-flex items-center px-3 py-1.5 border border-red-300 dark:border-red-600 rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200">
-                        <i class="fas fa-times mr-1"></i>
-                        Reset All
-                    </button>
+                    <div class="flex items-center space-x-2">
+                        <button id="configureTest" class="inline-flex items-center px-3 py-1.5 border border-blue-300 dark:border-blue-600 rounded-md shadow-sm text-sm font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors duration-200">
+                            <i class="fas fa-cog mr-1"></i>
+                            Configure Test
+                        </button>
+                        <button id="resetAll" class="inline-flex items-center px-3 py-1.5 border border-red-300 dark:border-red-600 rounded-md shadow-sm text-sm font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors duration-200">
+                            <i class="fas fa-times mr-1"></i>
+                            Reset All
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Input Form -->
@@ -285,6 +287,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Process</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">AT</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">BT</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Priority</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">CT</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">TAT</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">WT</th>
@@ -298,9 +301,10 @@
                     </div>
 
                     <div class="mt-4 text-xs text-gray-500 dark:text-gray-400 space-y-1">
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div><strong>AT:</strong> Arrival Time</div>
                             <div><strong>BT:</strong> Burst Time</div>
+                            <div><strong>Priority:</strong> Process Priority</div>
                             <div><strong>CT:</strong> Completion Time</div>
                             <div><strong>TAT:</strong> Turnaround Time</div>
                             <div><strong>WT:</strong> Waiting Time</div>
@@ -311,6 +315,212 @@
             </div>
         </div>
     </main>
+
+    <!-- Test Configuration Modal -->
+    <div id="testConfigModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-2xl shadow-lg rounded-md bg-white dark:bg-gray-800">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Configure Process Test</h3>
+                    <button id="closeConfigModal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <!-- Process Count Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Process Count</label>
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <button id="select1000" class="process-count-btn p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white">1000</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Processes</div>
+                            </button>
+                            <button id="select5000" class="process-count-btn p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <div class="text-2xl font-bold text-gray-900 dark:text-white">5000</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Processes</div>
+                            </button>
+                            <button id="selectCustom" class="process-count-btn p-4 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-center hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <div class="text-xl font-bold text-gray-900 dark:text-white">
+                                    <i class="fas fa-edit"></i>
+                                </div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">Custom</div>
+                            </button>
+                        </div>
+                        
+                        <!-- Custom Process Count Input -->
+                        <div id="customProcessInput" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-hashtag mr-1"></i>
+                                Enter Process Count
+                            </label>
+                            <input type="number" id="customProcessCount" min="1" max="5000" placeholder="Enter number (1-5,000)"
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white">
+                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Recommended: 1-5,000 processes (larger values may impact performance)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parameter Configuration -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Arrival Time Range -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-clock mr-1"></i>
+                                Arrival Time Range
+                            </label>
+                            <div class="space-y-2">
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Min</label>
+                                    <input type="number" id="arrivalMin" value="0" min="0" max="1000" 
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Max</label>
+                                    <input type="number" id="arrivalMax" value="100" min="0" max="1000" 
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Burst Time Range -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-stopwatch mr-1"></i>
+                                Burst Time Range
+                            </label>
+                            <div class="space-y-2">
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Min</label>
+                                    <input type="number" id="burstMin" value="1" min="1" max="100" 
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Max</label>
+                                    <input type="number" id="burstMax" value="20" min="1" max="100" 
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Priority Range -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-star mr-1"></i>
+                                Priority Range
+                            </label>
+                            <div class="space-y-2">
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Min</label>
+                                    <input type="number" id="priorityMin" value="1" min="1" max="20" 
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-500 dark:text-gray-400">Max</label>
+                                    <input type="number" id="priorityMax" value="10" min="1" max="20" 
+                                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Algorithm Selection -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            <i class="fas fa-microchip mr-1"></i>
+                            Select Algorithm to Test
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="algorithm-radio flex items-center p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <input type="radio" name="testAlgorithm" id="testFCFS" value="fcfs" checked class="mr-3 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">FCFS</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">First Come First Serve</div>
+                                </div>
+                            </label>
+                            <label class="algorithm-radio flex items-center p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <input type="radio" name="testAlgorithm" id="testSJF" value="sjf" class="mr-3 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">SJF</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Shortest Job First</div>
+                                </div>
+                            </label>
+                            <label class="algorithm-radio flex items-center p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <input type="radio" name="testAlgorithm" id="testSRTF" value="srtf" class="mr-3 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">SRTF</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Shortest Remaining Time</div>
+                                </div>
+                            </label>
+                            <label class="algorithm-radio flex items-center p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <input type="radio" name="testAlgorithm" id="testPriority" value="priority" class="mr-3 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Priority</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Non-Preemptive</div>
+                                </div>
+                            </label>
+                            <label class="algorithm-radio flex items-center p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <input type="radio" name="testAlgorithm" id="testPriorityPreemptive" value="priority-preemptive" class="mr-3 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Priority (P)</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Preemptive</div>
+                                </div>
+                            </label>
+                            <label class="algorithm-radio flex items-center p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 dark:hover:border-blue-400 transition-colors duration-200">
+                                <input type="radio" name="testAlgorithm" id="testRoundRobin" value="round-robin" class="mr-3 text-blue-600 focus:ring-blue-500">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Round Robin</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">Time Quantum Based</div>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Time Quantum Input for Round Robin -->
+                        <div id="timeQuantumInput" class="mt-4 hidden">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                <i class="fas fa-clock mr-1"></i>
+                                Time Quantum for Round Robin
+                            </label>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="testTimeQuantum" min="1" max="50" value="4" 
+                                       class="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm 
+                                              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+                                              dark:bg-gray-700 dark:text-white dark:focus:ring-blue-400 dark:focus:border-blue-400">
+                                <span class="text-sm text-gray-600 dark:text-gray-400">time units</span>
+                            </div>
+                            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                Each process gets this amount of CPU time before switching
+                            </div>
+                        </div>
+                        
+                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                            Select one algorithm to test (only one algorithm can be selected at a time)
+                        </div>
+                    </div>
+
+                    <!-- Current Selection Display -->
+                    <div id="configSummary" class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-2">Test Configuration:</h4>
+                        <div id="configDetails" class="text-sm text-gray-600 dark:text-gray-400">
+                            Select process count to see configuration details
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                    <button id="cancelConfig" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button id="runTest" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 border border-transparent rounded-md shadow-sm transition-colors duration-200" disabled>
+                        <i class="fas fa-play mr-2"></i>
+                        Run Test
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>

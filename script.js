@@ -7,6 +7,9 @@ class CPUScheduler {
         this.ganttChart = null;
         this.ganttData = [];
         this.metrics = [];
+        this.modalInitialized = false;
+        this.selectedProcessCount = null;
+        this.isCustomCount = false;
         this.processColors = [
             '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
             '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16'
@@ -58,6 +61,7 @@ class CPUScheduler {
         // Process input handlers
         document.getElementById('addProcess').addEventListener('click', () => this.addProcess());
         document.getElementById('resetAll').addEventListener('click', () => this.resetAll());
+        document.getElementById('configureTest').addEventListener('click', () => this.showTestConfigModal());
         
         // Algorithm buttons
         document.querySelectorAll('.calculate-btn').forEach(btn => {
@@ -75,8 +79,7 @@ class CPUScheduler {
             });
         });
 
-        // Export buttons
-        document.getElementById('exportChart').addEventListener('click', () => this.exportChart());
+        // Export button
         document.getElementById('exportCSV').addEventListener('click', () => this.exportCSV());
         
         // Time quantum setting
@@ -147,6 +150,12 @@ class CPUScheduler {
 
         if (arrivalTime < 0) {
             this.showError('Arrival time cannot be negative');
+            return;
+        }
+
+        // Check process limit for performance
+        if (this.processes.length >= 5000) {
+            this.showError('Maximum 5000 processes allowed for performance reasons');
             return;
         }
 
@@ -266,6 +275,22 @@ class CPUScheduler {
                 <div class="text-center text-gray-500 dark:text-gray-400 py-8">
                     <i class="fas fa-inbox text-2xl mb-2 opacity-50"></i>
                     <p class="text-sm">No processes added yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        // For large process counts (>100), don't show individual processes to improve performance
+        if (this.processes.length > 100) {
+            processList.innerHTML = `
+                <div class="text-center text-gray-600 dark:text-gray-400 py-8">
+                    <i class="fas fa-database text-4xl mb-4"></i>
+                    <p class="text-lg font-medium mb-2">${this.processes.length} Processes Loaded</p>
+                    <p class="text-sm">Individual process list hidden for performance</p>
+                    <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                        <div><strong>Arrival Time Range:</strong> ${Math.min(...this.processes.map(p => p.arrivalTime))} - ${Math.max(...this.processes.map(p => p.arrivalTime))}</div>
+                        <div><strong>Burst Time Range:</strong> ${Math.min(...this.processes.map(p => p.burstTime))} - ${Math.max(...this.processes.map(p => p.burstTime))}</div>
+                    </div>
                 </div>
             `;
             return;
@@ -391,9 +416,8 @@ class CPUScheduler {
             }
         });
 
-        // Update export buttons
+        // Update export button
         const hasResults = this.ganttData.length > 0;
-        document.getElementById('exportChart').disabled = !hasResults;
         document.getElementById('exportCSV').disabled = !hasResults;
     }
 
@@ -570,6 +594,7 @@ class CPUScheduler {
                 processId: selectedProcess.id,
                 arrivalTime: selectedProcess.arrivalTime,
                 burstTime: selectedProcess.burstTime,
+                priority: selectedProcess.priority,
                 completionTime: completionTime,
                 turnaroundTime: turnaroundTime,
                 waitingTime: waitingTime,
@@ -668,6 +693,7 @@ class CPUScheduler {
                     processId: selectedProcess.id,
                     arrivalTime: selectedProcess.arrivalTime,
                     burstTime: selectedProcess.burstTime,
+                    priority: selectedProcess.priority,
                     completionTime: completionTime,
                     turnaroundTime: turnaroundTime,
                     waitingTime: waitingTime,
@@ -749,6 +775,7 @@ class CPUScheduler {
                     processId: selectedProcess.id,
                     arrivalTime: selectedProcess.arrivalTime,
                     burstTime: selectedProcess.burstTime,
+                    priority: selectedProcess.priority,
                     completionTime: completionTime,
                     turnaroundTime: turnaroundTime,
                     waitingTime: waitingTime,
@@ -842,6 +869,7 @@ class CPUScheduler {
                         processId: selectedProcess.id,
                         arrivalTime: selectedProcess.arrivalTime,
                         burstTime: selectedProcess.burstTime,
+                        priority: selectedProcess.priority,
                         completionTime: completionTime,
                         turnaroundTime: turnaroundTime,
                         waitingTime: waitingTime,
@@ -957,6 +985,7 @@ class CPUScheduler {
                     processId: currentProcess.id,
                     arrivalTime: currentProcess.arrivalTime,
                     burstTime: currentProcess.burstTime,
+                    priority: currentProcess.priority,
                     completionTime: completionTime,
                     turnaroundTime: turnaroundTime,
                     waitingTime: waitingTime,
@@ -1132,6 +1161,17 @@ class CPUScheduler {
             return;
         }
 
+        // For large process counts, don't show individual process colors
+        if (this.processes.length > 100) {
+            legend.innerHTML = `
+                <div class="text-center text-gray-600 dark:text-gray-400">
+                    <p class="text-sm">Process legend hidden for ${this.processes.length} processes (performance optimization)</p>
+                </div>
+            `;
+            legend.classList.remove('hidden');
+            return;
+        }
+
         const uniqueProcesses = [...new Set(this.ganttData
             .filter(d => d.processId !== null) // Exclude idle time
             .map(d => d.processId))]
@@ -1201,16 +1241,20 @@ class CPUScheduler {
             // Waiting Time = Turnaround Time - Burst Time ✓
             // Response Time = First Execution Time - Arrival Time ✓
             
+            // Hide colors for large process counts to improve performance
+            const showColors = this.processes.length <= 100;
+            
             return `
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center space-x-2">
-                            <div class="w-3 h-3 rounded-full" style="background-color: ${metric.color}"></div>
+                            ${showColors ? `<div class="w-3 h-3 rounded-full" style="background-color: ${metric.color}"></div>` : ''}
                             <span class="text-sm font-medium text-gray-900 dark:text-white">${metric.processId}</span>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${metric.arrivalTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${metric.burstTime}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${metric.priority}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${metric.completionTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${metric.turnaroundTime}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${metric.waitingTime}</td>
@@ -1223,68 +1267,20 @@ class CPUScheduler {
         container.classList.add('fade-in');
     }
 
-    exportChart() {
-        if (this.ganttData.length === 0) {
-            this.showError('No chart data to export');
-            return;
-        }
-
-        const svg = document.querySelector('#ganttChartContainer svg');
-        if (!svg) return;
-
-        // Get the actual dimensions from the viewBox or default values
-        const viewBox = svg.getAttribute('viewBox');
-        let width = parseInt(svg.getAttribute('width')) || 800;
-        let height = parseInt(svg.getAttribute('height')) || 200;
-        
-        if (viewBox) {
-            const viewBoxValues = viewBox.split(' ');
-            width = parseInt(viewBoxValues[2]);
-            height = parseInt(viewBoxValues[3]);
-        }
-
-        const svgData = new XMLSerializer().serializeToString(svg);
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-
-        // Set canvas size with high DPI for better quality
-        const scaleFactor = 2;
-        canvas.width = width * scaleFactor;
-        canvas.height = height * scaleFactor;
-        ctx.scale(scaleFactor, scaleFactor);
-
-        img.onload = () => {
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, width, height);
-            ctx.drawImage(img, 0, 0, width, height);
-
-            canvas.toBlob(blob => {
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `gantt-chart-${this.currentAlgorithm}-${new Date().toISOString().slice(0, 10)}.png`;
-                a.click();
-                URL.revokeObjectURL(url);
-            });
-        };
-
-        img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
-    }
-
     exportCSV() {
         if (this.metrics.length === 0) {
             this.showError('No metrics data to export');
             return;
         }
 
-        const headers = ['Process', 'Arrival Time', 'Burst Time', 'Completion Time', 'Turnaround Time', 'Waiting Time', 'Response Time'];
+        const headers = ['Process', 'Arrival Time', 'Burst Time', 'Priority', 'Completion Time', 'Turnaround Time', 'Waiting Time', 'Response Time'];
         const csvContent = [
             headers.join(','),
             ...this.metrics.map(m => [
                 m.processId,
                 m.arrivalTime,
                 m.burstTime,
+                m.priority,
                 m.completionTime,
                 m.turnaroundTime,
                 m.waitingTime,
@@ -1322,12 +1318,27 @@ class CPUScheduler {
     }
 
     showError(message) {
-        // Create or update error notification
-        let notification = document.querySelector('.error-notification');
+        this.showNotification(message, 'error');
+    }
+
+    showSuccess(message) {
+        this.showNotification(message, 'success');
+    }
+
+    showNotification(message, type = 'error') {
+        // Create or update notification
+        let notification = document.querySelector('.notification');
         if (!notification) {
             notification = document.createElement('div');
-            notification.className = 'error-notification fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+            notification.className = 'notification fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
             document.body.appendChild(notification);
+        }
+
+        // Set colors based on type
+        if (type === 'success') {
+            notification.className = notification.className.replace(/bg-\w+-500/g, '') + ' bg-green-500 text-white';
+        } else {
+            notification.className = notification.className.replace(/bg-\w+-500/g, '') + ' bg-red-500 text-white';
         }
 
         notification.textContent = message;
@@ -1342,30 +1353,474 @@ class CPUScheduler {
             }, 300);
         }, 3000);
     }
+
+    // Test configuration modal methods
+    showTestConfigModal() {
+        const modal = document.getElementById('testConfigModal');
+        modal.classList.remove('hidden');
+        
+        // Initialize modal event listeners if not already done
+        if (!this.modalInitialized) {
+            this.initializeModalListeners();
+            this.modalInitialized = true;
+        }
+        
+        // Reset selection
+        this.selectedProcessCount = null;
+        this.isCustomCount = false;
+        
+        // Reset button styles
+        document.querySelectorAll('.process-count-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            btn.classList.add('border-gray-300', 'dark:border-gray-600');
+        });
+        
+        // Hide custom input and clear value
+        document.getElementById('customProcessInput').classList.add('hidden');
+        document.getElementById('customProcessCount').value = '';
+        
+        // Handle initial algorithm selection and time quantum visibility
+        this.handleAlgorithmSelection();
+        
+        this.updateConfigDisplay();
+    }
+
+    initializeModalListeners() {
+        // Close modal handlers
+        document.getElementById('closeConfigModal').addEventListener('click', () => this.hideTestConfigModal());
+        document.getElementById('cancelConfig').addEventListener('click', () => this.hideTestConfigModal());
+        
+        // Process count selection
+        document.getElementById('select1000').addEventListener('click', () => this.selectProcessCount(1000));
+        document.getElementById('select5000').addEventListener('click', () => this.selectProcessCount(5000));
+        document.getElementById('selectCustom').addEventListener('click', () => this.selectCustomProcessCount());
+        
+        // Custom process count input
+        document.getElementById('customProcessCount').addEventListener('input', () => this.handleCustomProcessCountInput());
+        
+        // Run test button
+        document.getElementById('runTest').addEventListener('click', () => this.runConfiguredTest());
+        
+        // Input validation
+        ['arrivalMin', 'arrivalMax', 'burstMin', 'burstMax', 'priorityMin', 'priorityMax'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => this.validateInputs());
+        });
+        
+        // Algorithm selection validation and time quantum visibility
+        ['testFCFS', 'testSJF', 'testSRTF', 'testPriority', 'testPriorityPreemptive', 'testRoundRobin'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                this.handleAlgorithmSelection();
+                this.validateInputs();
+            });
+        });
+        
+        // Time quantum input validation
+        document.getElementById('testTimeQuantum').addEventListener('input', () => this.validateInputs());
+        
+        // Close modal when clicking outside
+        document.getElementById('testConfigModal').addEventListener('click', (e) => {
+            if (e.target.id === 'testConfigModal') {
+                this.hideTestConfigModal();
+            }
+        });
+    }
+
+    hideTestConfigModal() {
+        document.getElementById('testConfigModal').classList.add('hidden');
+    }
+
+    selectProcessCount(count) {
+        this.selectedProcessCount = count;
+        this.isCustomCount = false;
+        
+        // Update button styles
+        document.querySelectorAll('.process-count-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            btn.classList.add('border-gray-300', 'dark:border-gray-600');
+        });
+        
+        const selectedBtn = document.getElementById(`select${count}`);
+        selectedBtn.classList.remove('border-gray-300', 'dark:border-gray-600');
+        selectedBtn.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        
+        // Hide custom input
+        document.getElementById('customProcessInput').classList.add('hidden');
+        
+        this.updateConfigDisplay();
+        this.validateInputs();
+    }
+
+    selectCustomProcessCount() {
+        this.isCustomCount = true;
+        
+        // Update button styles
+        document.querySelectorAll('.process-count-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+            btn.classList.add('border-gray-300', 'dark:border-gray-600');
+        });
+        
+        const customBtn = document.getElementById('selectCustom');
+        customBtn.classList.remove('border-gray-300', 'dark:border-gray-600');
+        customBtn.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        
+        // Show custom input
+        document.getElementById('customProcessInput').classList.remove('hidden');
+        
+        // Focus on input
+        setTimeout(() => {
+            document.getElementById('customProcessCount').focus();
+        }, 100);
+        
+        // Get current value or set default
+        const currentValue = parseInt(document.getElementById('customProcessCount').value);
+        if (currentValue && currentValue >= 1 && currentValue <= 5000) {
+            this.selectedProcessCount = currentValue;
+        } else {
+            this.selectedProcessCount = null;
+        }
+        
+        this.updateConfigDisplay();
+        this.validateInputs();
+    }
+
+    handleCustomProcessCountInput() {
+        if (!this.isCustomCount) return;
+        
+        const input = document.getElementById('customProcessCount');
+        const value = parseInt(input.value);
+        
+        if (value && value >= 1 && value <= 5000) {
+            this.selectedProcessCount = value;
+            input.classList.remove('border-red-500', 'focus:border-red-500');
+            input.classList.add('border-gray-300', 'focus:border-blue-500');
+        } else {
+            this.selectedProcessCount = null;
+            if (input.value) { // Only show error if there's a value
+                input.classList.remove('border-gray-300', 'focus:border-blue-500');
+                input.classList.add('border-red-500', 'focus:border-red-500');
+            }
+        }
+        
+        this.updateConfigDisplay();
+        this.validateInputs();
+    }
+
+    handleAlgorithmSelection() {
+        const selectedAlgorithm = document.querySelector('input[name="testAlgorithm"]:checked');
+        const timeQuantumInput = document.getElementById('timeQuantumInput');
+        
+        if (selectedAlgorithm && selectedAlgorithm.value === 'round-robin') {
+            timeQuantumInput.classList.remove('hidden');
+        } else {
+            timeQuantumInput.classList.add('hidden');
+        }
+    }
+
+    updateConfigDisplay() {
+        const configDetails = document.getElementById('configDetails');
+        
+        if (!this.selectedProcessCount) {
+            if (this.isCustomCount) {
+                configDetails.textContent = 'Enter a valid process count (1-5,000) to see configuration details';
+            } else {
+                configDetails.textContent = 'Select process count to see configuration details';
+            }
+            return;
+        }
+        
+        const arrivalMin = parseInt(document.getElementById('arrivalMin').value) || 0;
+        const arrivalMax = parseInt(document.getElementById('arrivalMax').value) || 100;
+        const burstMin = parseInt(document.getElementById('burstMin').value) || 1;
+        const burstMax = parseInt(document.getElementById('burstMax').value) || 20;
+        const priorityMin = parseInt(document.getElementById('priorityMin').value) || 1;
+        const priorityMax = parseInt(document.getElementById('priorityMax').value) || 10;
+        
+        const countDisplay = this.isCustomCount ? 
+            `${this.selectedProcessCount.toLocaleString()} (Custom)` : 
+            this.selectedProcessCount.toLocaleString();
+        
+        // Get selected algorithm
+        const selectedAlgorithm = document.querySelector('input[name="testAlgorithm"]:checked');
+        const algorithmDisplay = selectedAlgorithm ? this.getAlgorithmDisplayName(selectedAlgorithm.value) : 'None selected';
+        
+        // Get time quantum if Round Robin is selected
+        let timeQuantumDisplay = '';
+        if (selectedAlgorithm && selectedAlgorithm.value === 'round-robin') {
+            const timeQuantum = parseInt(document.getElementById('testTimeQuantum').value) || 4;
+            timeQuantumDisplay = ` (Quantum: ${timeQuantum})`;
+        }
+        
+        configDetails.innerHTML = `
+            <div class="grid grid-cols-2 gap-4">
+                <div><strong>Process Count:</strong> ${countDisplay}</div>
+                <div><strong>Algorithm:</strong> ${algorithmDisplay}${timeQuantumDisplay}</div>
+                <div><strong>Arrival Time Range:</strong> ${arrivalMin} - ${arrivalMax}</div>
+                <div><strong>Burst Time Range:</strong> ${burstMin} - ${burstMax}</div>
+                <div><strong>Priority Range:</strong> ${priorityMin} - ${priorityMax}</div>
+            </div>
+        `;
+    }
+
+    getAlgorithmDisplayName(algorithmValue) {
+        const algorithmMap = {
+            'fcfs': 'FCFS',
+            'sjf': 'SJF', 
+            'srtf': 'SRTF',
+            'priority': 'Priority',
+            'priority-preemptive': 'Priority (P)',
+            'round-robin': 'Round Robin'
+        };
+        return algorithmMap[algorithmValue] || algorithmValue;
+    }
+
+    validateInputs() {
+        const arrivalMin = parseInt(document.getElementById('arrivalMin').value);
+        const arrivalMax = parseInt(document.getElementById('arrivalMax').value);
+        const burstMin = parseInt(document.getElementById('burstMin').value);
+        const burstMax = parseInt(document.getElementById('burstMax').value);
+        const priorityMin = parseInt(document.getElementById('priorityMin').value);
+        const priorityMax = parseInt(document.getElementById('priorityMax').value);
+        
+        // Validate process count
+        let processCountValid = false;
+        if (this.selectedProcessCount) {
+            if (this.isCustomCount) {
+                processCountValid = this.selectedProcessCount >= 1 && this.selectedProcessCount <= 5000;
+            } else {
+                processCountValid = true; // Preset counts are always valid
+            }
+        }
+        
+        const rangesValid = arrivalMin >= 0 && arrivalMax >= arrivalMin &&
+                           burstMin >= 1 && burstMax >= burstMin &&
+                           priorityMin >= 1 && priorityMax >= priorityMin;
+        
+        // Check if an algorithm is selected
+        const selectedAlgorithm = document.querySelector('input[name="testAlgorithm"]:checked');
+        const algorithmSelected = selectedAlgorithm !== null;
+        
+        // Validate time quantum for Round Robin
+        let timeQuantumValid = true;
+        if (selectedAlgorithm && selectedAlgorithm.value === 'round-robin') {
+            const timeQuantum = parseInt(document.getElementById('testTimeQuantum').value);
+            timeQuantumValid = timeQuantum && timeQuantum >= 1 && timeQuantum <= 50;
+        }
+        
+        const isValid = processCountValid && rangesValid && algorithmSelected && timeQuantumValid;
+        
+        document.getElementById('runTest').disabled = !isValid;
+        
+        // Update config display
+        this.updateConfigDisplay();
+        
+        // Show validation message for custom count
+        if (this.isCustomCount) {
+            const input = document.getElementById('customProcessCount');
+            const value = parseInt(input.value);
+            
+            if (input.value && (!value || value < 1 || value > 5000)) {
+                input.classList.remove('border-gray-300', 'dark:border-gray-600', 'focus:border-blue-500');
+                input.classList.add('border-red-500', 'focus:border-red-500');
+            } else if (input.value) {
+                input.classList.remove('border-red-500', 'focus:border-red-500');
+                input.classList.add('border-gray-300', 'dark:border-gray-600', 'focus:border-blue-500');
+            }
+        }
+    }
+
+    runConfiguredTest() {
+        const selectedAlgorithm = document.querySelector('input[name="testAlgorithm"]:checked');
+        
+        const config = {
+            processCount: this.selectedProcessCount,
+            arrivalMin: parseInt(document.getElementById('arrivalMin').value),
+            arrivalMax: parseInt(document.getElementById('arrivalMax').value),
+            burstMin: parseInt(document.getElementById('burstMin').value),
+            burstMax: parseInt(document.getElementById('burstMax').value),
+            priorityMin: parseInt(document.getElementById('priorityMin').value),
+            priorityMax: parseInt(document.getElementById('priorityMax').value),
+            algorithms: [selectedAlgorithm.value]
+        };
+        
+        // Set time quantum if Round Robin is selected
+        if (selectedAlgorithm.value === 'round-robin') {
+            config.timeQuantum = parseInt(document.getElementById('testTimeQuantum').value) || 4;
+        }
+        
+        this.hideTestConfigModal();
+        this.testWithCustomConfig(config);
+    }
+
+    // Test function to generate processes and test all algorithms with custom configuration
+    testWithCustomConfig(config) {
+        const { processCount, arrivalMin, arrivalMax, burstMin, burstMax, priorityMin, priorityMax, algorithms, timeQuantum } = config;
+        
+        console.log(`🧪 Starting ${processCount} process test...`);
+        const startTime = performance.now();
+        
+        // Clear existing processes
+        this.processes = [];
+        
+        // Generate test processes with custom ranges
+        for (let i = 1; i <= processCount; i++) {
+            const process = {
+                id: `P${i}`,
+                arrivalTime: Math.floor(Math.random() * (arrivalMax - arrivalMin + 1)) + arrivalMin,
+                burstTime: Math.floor(Math.random() * (burstMax - burstMin + 1)) + burstMin,
+                priority: Math.floor(Math.random() * (priorityMax - priorityMin + 1)) + priorityMin,
+                color: this.processColors[(i - 1) % this.processColors.length],
+                originalBurstTime: null
+            };
+            process.originalBurstTime = process.burstTime;
+            this.processes.push(process);
+        }
+        
+        const processGenerationTime = performance.now() - startTime;
+        
+        // Update UI
+        this.updateProcessList();
+        this.updateCalculateButtons();
+        
+        // Test selected algorithms only
+        const allAlgorithms = [
+            { name: 'FCFS', method: 'calculateFCFS', key: 'fcfs' },
+            { name: 'SJF', method: 'calculateSJF', key: 'sjf' },
+            { name: 'SRTF', method: 'calculateSRTF', key: 'srtf' },
+            { name: 'Priority (Non-Preemptive)', method: () => this.calculatePriority(false), key: 'priority' },
+            { name: 'Priority (Preemptive)', method: () => this.calculatePriority(true), key: 'priority-preemptive' },
+            { name: 'Round Robin', method: 'calculateRoundRobin', key: 'round-robin' }
+        ];
+        
+        // Filter algorithms based on selection (default to all if none specified)
+        const selectedAlgorithms = algorithms && algorithms.length > 0 
+            ? allAlgorithms.filter(algo => algorithms.includes(algo.key))
+            : allAlgorithms;
+        
+        const results = {};
+        
+        for (const algo of selectedAlgorithms) {
+            try {
+                const algoStartTime = performance.now();
+                
+                // Set time quantum for Round Robin
+                if (algo.name === 'Round Robin') {
+                    this.timeQuantum = timeQuantum || 4; // Use custom quantum or default to 4
+                }
+                
+                let result;
+                if (typeof algo.method === 'string') {
+                    result = this[algo.method]();
+                } else {
+                    result = algo.method();
+                }
+                
+                const algoEndTime = performance.now();
+                const executionTime = algoEndTime - algoStartTime;
+                
+                if (result && result.ganttData && result.metrics) {
+                    results[algo.name] = {
+                        success: true,
+                        executionTime: executionTime,
+                        ganttSegments: result.ganttData.length,
+                        processesCompleted: result.metrics.length,
+                        avgWaitingTime: (result.metrics.reduce((sum, m) => sum + m.waitingTime, 0) / result.metrics.length).toFixed(2),
+                        avgTurnaroundTime: (result.metrics.reduce((sum, m) => sum + m.turnaroundTime, 0) / result.metrics.length).toFixed(2)
+                    };
+                } else {
+                    results[algo.name] = {
+                        success: false,
+                        error: 'No result returned'
+                    };
+                }
+                
+            } catch (error) {
+                results[algo.name] = {
+                    success: false,
+                    error: error.message,
+                    executionTime: 0
+                };
+            }
+        }
+        
+        const totalTime = performance.now() - startTime;
+        
+        // Display results summary
+        console.log(`📊 Test Results (${processCount} processes):`);
+        for (const [algoName, result] of Object.entries(results)) {
+            if (result.success) {
+                console.log(`✅ ${algoName}: ${result.executionTime.toFixed(2)}ms, WT:${result.avgWaitingTime}, TAT:${result.avgTurnaroundTime}`);
+            } else {
+                console.log(`❌ ${algoName}: ${result.error}`);
+            }
+        }
+        console.log(`⏱️ Total: ${totalTime.toFixed(2)}ms`);
+        
+        // Show simple notification
+        this.showSuccess(`Test completed in ${totalTime.toFixed(2)}ms`);
+        
+        // Display first successful result in the UI
+        const firstSuccessfulResult = Object.entries(results).find(([_, result]) => result.success);
+        if (firstSuccessfulResult) {
+            const [algoName] = firstSuccessfulResult;
+            const algoKey = selectedAlgorithms.find(a => a.name === algoName)?.key;
+            
+            if (algoKey) {
+                this.currentAlgorithm = algoKey;
+                this.selectAlgorithm(algoKey);
+                
+                // Re-calculate to get fresh data for display
+                const selectedAlgo = selectedAlgorithms.find(a => a.name === algoName);
+                let displayResult;
+                if (typeof selectedAlgo.method === 'string') {
+                    displayResult = this[selectedAlgo.method]();
+                } else {
+                    displayResult = selectedAlgo.method();
+                }
+                
+                if (displayResult) {
+                    this.ganttData = displayResult.ganttData;
+                    this.metrics = displayResult.metrics;
+                    this.updateGanttChart();
+                    this.updateMetricsTable();
+                    this.updateCalculateButtons();
+                }
+            }
+        }
+        
+        return results;
+    }
+
+    // Legacy test function for backward compatibility
+    testWithNProcesses(processCount = 1000) {
+        const config = {
+            processCount: processCount,
+            arrivalMin: 0,
+            arrivalMax: 100,
+            burstMin: 1,
+            burstMax: 20,
+            priorityMin: 1,
+            priorityMax: 10
+        };
+        
+        return this.testWithCustomConfig(config);
+    }
 }
 
 // Initialize the scheduler when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.scheduler = new CPUScheduler();
     
-    // Add some sample processes for demonstration
-    const samples = [
-        { id: 'P1', at: 0, bt: 5, priority: 1 },
-        { id: 'P2', at: 2, bt: 3, priority: 2 },
-        { id: 'P3', at: 1, bt: 8, priority: 3 }
-    ];
-
-    // Uncomment to add sample data
-    /*
-    samples.forEach(sample => {
-        document.getElementById('processId').value = sample.id;
-        document.getElementById('arrivalTime').value = sample.at;
-        document.getElementById('burstTime').value = sample.bt;
-        document.getElementById('priority').value = sample.priority;
-        scheduler.addProcess();
-    });
-    */
-
+    // Expose test functions globally for console access
+    window.testWithNProcesses = (count) => window.scheduler.testWithNProcesses(count);
+    window.testWithCustomConfig = (config) => window.scheduler.testWithCustomConfig(config);
+    
     // Set initial process ID
     document.getElementById('processId').value = 'P1';
+    
+    // Show instructions for testing
+    console.log('🚀 CPU Scheduler Visualizer Loaded!');
+    console.log('📝 Testing Commands:');
+    console.log('   • testWithNProcesses(n) - Test with n processes (1-5,000)');
+    console.log('   • testWithCustomConfig(config) - Custom test with specific parameters');
+    console.log('🎯 Use the "Configure Test" button in the UI for guided setup');
 });
